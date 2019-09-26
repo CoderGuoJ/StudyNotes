@@ -1,0 +1,45 @@
+
+# 第4章:Kafka消费者
+
+1. 消费者和消费者组
+   1. 消费者
+      1. 消费某一个或多个分区的消息
+      2. 通过offset记录消费进度
+      3. 消费者数量大于partition数量时，多余的消费者会被闲置
+      4. 有消费者加入(离开)消费者组时，消费者组会重新均衡分区与消费者的对应关系，均衡期间暂停消费
+      5. 消费者会定期向topic的leader发送心跳，超过一段时间没有心跳会被移出消费者组
+      6. 第一个加入group的消费者会维护消费分区分配信息，并将信息同步给协调器处理
+   2. 轮询
+      1. 消费者通过持续轮询来向kafka请求数据
+      2. 如果轮询被阻塞超过心跳超时时间，消费者会被kafka移出消费者组
+      3. poll()方法会返回所属topic的信息，分区信息，偏移量信息
+   3. 配置
+      1. fetch.min.bytes
+         1. 消费者从kafka获取数据的最小字节数，如果数据量不足则会等待
+      2. fetch.max.wait.ms
+         1. 如果超过本设置的时间数据量依然不满足最小发送大小将会直接发送当前所有数据
+      3. max.partition.fetch.bytes
+         1. 每个分区返回给消费者的最大数据大小
+      4. session.timeout.ms
+         1. 心跳超时时间
+      5. auto.offset.reset
+         1. 消费者读取一个没有offset或者offset不可用的topic时采用的策略，默认latest表示从最新的数据开始消费,earliest表示从头开始消费
+      6. enable.auto.commit
+         1. 定时自动提交offset开关，auto.commit.interval.ms设置提交间隔
+      7. partition.assignment.strategy
+         1. 分区分配策略
+         2. Range
+            1. 连续分区分配
+         3. RoundBoin
+            1. 轮询分区分配
+      8. client.id
+         1. 任意值，携带在数据中，常用与日志或标记消费者
+      9. max.poll.records
+         1. 单次调用call的时候返回的记录数量
+      10. recevie.buffer.bytes与send.buffer.bytes
+          1. socket在读取或写入时的缓存大小
+   4. 偏移量
+      1. 同步提交立即返回结果或错误,自动重试
+      2. 异步提交无需等待结果，但是由于可能有更新的offset被提交所以无法重试
+      3. 可以在消费者运行期间采用异步提交，关闭消费者时执行同步提交以保证数据完整性
+      4. 可以指定offset提交，需要设置好各个分区的offset
